@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
     // Loader
     const loader = document.getElementById('loader');
     window.addEventListener('load', () => {
@@ -267,21 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold: 0.5 });
 
     counters.forEach(counter => counterObserver.observe(counter));
-
-    // Skill Progress Animation
-    const skillProgress = document.querySelectorAll('.skill-progress');
-
-    const skillObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const progress = entry.target.getAttribute('data-progress');
-                entry.target.style.width = `${progress}%`;
-                skillObserver.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.5 });
-
-    skillProgress.forEach(progress => skillObserver.observe(progress));
 
     // Smooth Scroll
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {

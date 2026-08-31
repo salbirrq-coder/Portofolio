@@ -6,7 +6,7 @@
     <meta name="description" content="Portfolio Kaisyalbi Asyrafi Launi - Programmer & Digital Creator">
     <title>Kaisyalbi Asyrafi Launi — Programmer</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -53,45 +53,46 @@
     <!-- Hero Section -->
     <section id="home" class="hero">
         <div class="hero-content">
-            <p class="hero-greeting">Hello, I'm</p>
-            <h1 class="hero-name">
-                <span class="name-line">Kaisyalbi</span>
-                <span class="name-line">Asyrafi</span>
-                <span class="name-line">Launi</span>
-            </h1>
-            <div class="hero-title">
-                <span class="title-prefix">I'm a </span>
-                <span class="typing-text" id="typing-text"></span>
-                <span class="cursor-blink">|</span>
-            </div>
-            <p class="hero-description">
-                Saya adalah seorang programmer yang tertarik pada pengembangan website, teknologi, dan dunia digital. Saya suka membuat website yang modern, interaktif, responsif, dan memiliki tampilan yang menarik.
-            </p>
-            <div class="hero-buttons">
-                <a href="#projects" class="btn btn-primary">
-                    <span>View My Work</span>
-                    <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            <div class="hero-social">
-                <a href="#" class="social-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
-                <a href="#" class="social-link" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                <a href="#" class="social-link" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                <a href="#" class="social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-            </div>
-        </div>
-        <div class="hero-visual">
-            <div class="code-window">
-                <div class="window-header">
-                    <div class="window-buttons">
-                        <span class="btn-close"></span>
-                        <span class="btn-minimize"></span>
-                        <span class="btn-maximize"></span>
-                    </div>
-                    <span class="window-title">developer.js</span>
+            <div class="hero-text">
+                <p class="hero-greeting">Hello, I'm</p>
+                <h1 class="hero-name">
+                    <span class="name-line">Kaisyalbi</span>
+                    <span class="name-line">Asyrafi</span>
+                    <span class="name-line">Launi</span>
+                </h1>
+                <div class="hero-title">
+                    <span class="title-prefix">I'm a </span>
+                    <span class="typing-text" id="typing-text"></span>
+                    <span class="cursor-blink">|</span>
                 </div>
-                <div class="window-content">
-                    <pre><code><span class="code-keyword">const</span> <span class="code-variable">developer</span> = {
+                <p class="hero-description">
+                    Saya adalah seorang programmer yang tertarik pada pengembangan website, teknologi, dan dunia digital. Saya suka membuat website yang modern, interaktif, responsif, dan memiliki tampilan yang menarik.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#projects" class="btn btn-primary">
+                        <span>View My Work</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="hero-social">
+                    <a href="#" class="social-link" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                    <a href="#" class="social-link" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#" class="social-link" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="code-window">
+                    <div class="window-header">
+                        <div class="window-buttons">
+                            <span class="btn-close"></span>
+                            <span class="btn-minimize"></span>
+                            <span class="btn-maximize"></span>
+                        </div>
+                        <span class="window-title">developer.js</span>
+                    </div>
+                    <div class="window-content">
+                        <pre><code><span class="code-keyword">const</span> <span class="code-variable">developer</span> = {
   <span class="code-property">name</span>: <span class="code-string">"Kaisyalbi Asyrafi Launi"</span>,
   <span class="code-property">alias</span>: <span class="code-string">"KAL"</span>,
   <span class="code-property">profession</span>: <span class="code-string">"Programmer"</span>,
@@ -107,6 +108,7 @@
 <span class="code-keyword">function</span> <span class="code-function">createAmazingThings</span>() {
   <span class="code-keyword">return</span> developer.passion;
 }</code></pre>
+                    </div>
                 </div>
             </div>
         </div>
@@ -168,37 +170,31 @@
                     <div class="skill-icon"><i class="fab fa-html5"></i></div>
                     <h3>HTML5</h3>
                     <p>Markup language for web structure</p>
-                    <div class="skill-bar"><div class="skill-progress" data-progress="95"></div></div>
                 </div>
                 <div class="skill-card" data-reveal>
                     <div class="skill-icon"><i class="fab fa-css3-alt"></i></div>
                     <h3>CSS3</h3>
                     <p>Styling and responsive design</p>
-                    <div class="skill-bar"><div class="skill-progress" data-progress="90"></div></div>
                 </div>
                 <div class="skill-card" data-reveal>
                     <div class="skill-icon"><i class="fab fa-js-square"></i></div>
                     <h3>JavaScript</h3>
                     <p>Interactive web applications</p>
-                    <div class="skill-bar"><div class="skill-progress" data-progress="85"></div></div>
                 </div>
                 <div class="skill-card" data-reveal>
                     <div class="skill-icon"><i class="fab fa-react"></i></div>
                     <h3>React</h3>
                     <p>Modern UI development</p>
-                    <div class="skill-bar"><div class="skill-progress" data-progress="80"></div></div>
                 </div>
                 <div class="skill-card" data-reveal>
                     <div class="skill-icon"><i class="fab fa-node-js"></i></div>
                     <h3>Node.js</h3>
                     <p>Backend development</p>
-                    <div class="skill-bar"><div class="skill-progress" data-progress="75"></div></div>
                 </div>
                 <div class="skill-card" data-reveal>
                     <div class="skill-icon"><i class="fab fa-python"></i></div>
                     <h3>Python</h3>
                     <p>General purpose programming</p>
-                    <div class="skill-bar"><div class="skill-progress" data-progress="70"></div></div>
                 </div>
             </div>
         </div>
