@@ -111,6 +111,21 @@ body {
     pointer-events: none;
 }
 
+.scene-3d {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0;
+    animation: sceneFadeIn 1.4s ease forwards 0.9s;
+}
+
+@keyframes sceneFadeIn {
+    to { opacity: 1; }
+}
+
 .bg-gradient {
     position: fixed;
     top: 0;
@@ -341,6 +356,8 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 4rem;
     align-items: center;
+    position: relative;
+    z-index: 2;
 }
 
 .hero-text {
@@ -567,6 +584,8 @@ body {
     width: 100%;
     max-width: 480px;
     position: relative;
+    z-index: 2;
+    transform-style: preserve-3d;
 }
 
 .code-window::before {
@@ -1182,15 +1201,40 @@ body {
     font-size: 0.9rem;
 }
 
+/* 3D tilt cards */
+.tiltable {
+    transform-style: preserve-3d;
+    transform-origin: center center;
+}
+
+.tilt-glare {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%),
+        rgba(0, 240, 255, 0.20) 0%,
+        rgba(123, 47, 255, 0.10) 28%,
+        transparent 60%);
+}
+
+.tiltable:hover .tilt-glare {
+    opacity: 1;
+}
+
 [data-reveal] {
     opacity: 0;
-    transform: translateY(30px);
-    transition: all 0.8s ease;
+    transform: perspective(900px) translateY(34px) rotateX(7deg);
+    transform-origin: 50% 100%;
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 [data-reveal].revealed {
     opacity: 1;
-    transform: translateY(0);
+    transform: perspective(900px) translateY(0) rotateX(0);
 }
 
 @media (max-width: 1024px) {
@@ -1220,6 +1264,10 @@ body {
     }
 
     .hero-visual {
+        display: none;
+    }
+
+    .scene-3d {
         display: none;
     }
 
@@ -1308,5 +1356,26 @@ body {
     .btn {
         width: 100%;
         justify-content: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scene-3d {
+        display: none;
+    }
+
+    .tilt-glare {
+        display: none;
+    }
+
+    .tiltable,
+    .tiltable:hover {
+        transform: none !important;
+    }
+
+    [data-reveal] {
+        opacity: 1;
+        transform: none;
+        transition: none;
     }
 }

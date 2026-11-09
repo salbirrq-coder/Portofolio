@@ -316,6 +316,36 @@
         });
     }
 
+    // 3D Tilt on Cards
+    document.querySelectorAll('.skill-card, .project-card').forEach(card => {
+        card.classList.add('tiltable');
+
+        const glare = document.createElement('span');
+        glare.className = 'tilt-glare';
+        glare.setAttribute('aria-hidden', 'true');
+        card.appendChild(glare);
+
+        const maxTilt = 9;
+
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const px = (e.clientX - rect.left) / rect.width;
+            const py = (e.clientY - rect.top) / rect.height;
+            const rotateX = ((0.5 - py) * maxTilt * 2).toFixed(2);
+            const rotateY = ((px - 0.5) * maxTilt * 2).toFixed(2);
+
+            card.style.transition = 'transform 0.1s ease-out';
+            card.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px) scale(1.02)`;
+            glare.style.setProperty('--gx', (px * 100).toFixed(1) + '%');
+            glare.style.setProperty('--gy', (py * 100).toFixed(1) + '%');
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transition = 'transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            card.style.transform = '';
+        });
+    });
+
     // Magnetic Effect on Buttons
     document.querySelectorAll('.btn, .social-link').forEach(button => {
         button.addEventListener('mousemove', (e) => {
@@ -388,6 +418,311 @@
         }
     `;
     document.head.appendChild(glitchStyle);
+
+    // 3D Holographic Hero Scene
+    const sceneCanvas = document.getElementById('scene-3d');
+    const heroSection = document.querySelector('.hero');
+
+    if (sceneCanvas && sceneCanvas.getContext && heroSection) {
+        const sceneCtx = sceneCanvas.getContext('2d');
+        const TAU = Math.PI * 2;
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const codeWindowEl = document.querySelector('.code-window');
+
+        let viewW = 0;
+        let viewH = 0;
+        let centerX = 0;
+        let centerY = 0;
+        let globeR = 260;
+        let pixelRatio = 1;
+        let pointerX = 0;
+        let pointerY = 0;
+        let targetX = 0;
+        let targetY = 0;
+        let inView = true;
+        let running = false;
+        let frameId = null;
+
+        // Globe geometry: latitude circles + meridians
+        const globeRings = [];
+
+        [-64, -32, 0, 32, 64].forEach(latDeg => {
+            const lat = latDeg * Math.PI / 180;
+            const pts = [];
+            for (let i = 0; i <= 80; i++) {
+                const a = i / 80 * TAU;
+                pts.push([Math.cos(a) * Math.cos(lat), Math.sin(lat), Math.sin(a) * Math.cos(lat)]);
+            }
+            globeRings.push({ pts, color: '0, 240, 255', alpha: 0.85 });
+        });
+
+        for (let lonDeg = 0; lonDeg < 180; lonDeg += 30) {
+            const lon = lonDeg * Math.PI / 180;
+            const pts = [];
+            for (let i = 0; i <= 80; i++) {
+                const a = i / 80 * TAU;
+                pts.push([Math.sin(a) * Math.cos(lon), Math.cos(a), Math.sin(a) * Math.sin(lon)]);
+            }
+            globeRings.push({ pts, color: '123, 47, 255', alpha: 0.7 });
+        }
+
+        // Orbiting rings
+        const orbits = [
+            { tiltX: 1.18, tiltZ: 0.28, speed: 0.32, radius: 1.12, color: '0, 240, 255', nodes: 2, alpha: 0.85 },
+            { tiltX: -0.5, tiltZ: -0.92, speed: -0.22, radius: 1.22, color: '123, 47, 255', nodes: 3, alpha: 0.8 },
+            { tiltX: 0.42, tiltZ: 1.48, speed: 0.16, radius: 1.32, color: '255, 0, 255', nodes: 1, alpha: 0.6 }
+        ];
+
+        orbits.forEach(orbit => {
+            orbit.pts = [];
+            for (let i = 0; i <= 96; i++) {
+                const a = i / 96 * TAU;
+                orbit.pts.push([Math.cos(a) * orbit.radius, 0, Math.sin(a) * orbit.radius]);
+            }
+        });
+
+        // Glowing dust on the globe surface
+        const dust = [];
+        for (let i = 0; i < 16; i++) {
+            const theta = Math.random() * TAU;
+            const phi = Math.acos(Math.random() * 2 - 1);
+            dust.push([
+                Math.sin(phi) * Math.cos(theta),
+                Math.cos(phi),
+                Math.sin(phi) * Math.sin(theta)
+            ]);
+        }
+
+        function rotatePoint(p, rx, ry, rz) {
+            let cos = Math.cos(rx);
+            let sin = Math.sin(rx);
+            let y = p[1] * cos - p[2] * sin;
+            let z = p[1] * sin + p[2] * cos;
+            let x = p[0];
+
+            cos = Math.cos(ry);
+            sin = Math.sin(ry);
+            const x1 = x * cos + z * sin;
+            z = -x * sin + z * cos;
+            x = x1;
+
+            cos = Math.cos(rz);
+            sin = Math.sin(rz);
+            const y1 = x * sin + y * cos;
+            x = x * cos - y * sin;
+            y = y1;
+
+            return [x, y, z];
+        }
+
+        function projectPoint(p, radius) {
+            const camera = 3.6;
+            const factor = camera / (camera - p[2]);
+            return [centerX + p[0] * radius * factor, centerY + p[1] * radius * factor, p[2]];
+        }
+
+        function strokeDepth(pts, color, alpha, width) {
+            const buckets = [[], [], [], [], []];
+
+            for (let i = 0; i < pts.length - 1; i++) {
+                const a = pts[i];
+                const b = pts[i + 1];
+                const z = (a[2] + b[2]) / 2;
+                const bucket = Math.max(0, Math.min(4, Math.floor((z + 1.3) / 2.6 * 5)));
+                buckets[bucket].push(a, b);
+            }
+
+            for (let b = 0; b < buckets.length; b++) {
+                const segments = buckets[b];
+                if (!segments.length) continue;
+
+                const depth = (b + 0.5) / buckets.length;
+                sceneCtx.strokeStyle = `rgba(${color}, ${((0.06 + depth * 0.55) * alpha).toFixed(3)})`;
+                sceneCtx.lineWidth = (0.5 + depth * 1.4) * width;
+                sceneCtx.beginPath();
+
+                for (let i = 0; i < segments.length; i += 2) {
+                    sceneCtx.moveTo(segments[i][0], segments[i][1]);
+                    sceneCtx.lineTo(segments[i + 1][0], segments[i + 1][1]);
+                }
+
+                sceneCtx.stroke();
+            }
+        }
+
+        function drawGlowNode(p, color, scale, radius) {
+            const pr = projectPoint(p, radius || globeR);
+            const depth = Math.max(0, Math.min(1, (p[2] + 1.3) / 2.6));
+            const size = (1.2 + depth * 2.6) * scale;
+            const glow = sceneCtx.createRadialGradient(pr[0], pr[1], 0, pr[0], pr[1], size * 6);
+
+            glow.addColorStop(0, `rgba(${color}, ${0.5 + depth * 0.4})`);
+            glow.addColorStop(0.3, `rgba(${color}, ${0.18 + depth * 0.22})`);
+            glow.addColorStop(1, `rgba(${color}, 0)`);
+
+            sceneCtx.fillStyle = glow;
+            sceneCtx.beginPath();
+            sceneCtx.arc(pr[0], pr[1], size * 6, 0, TAU);
+            sceneCtx.fill();
+
+            sceneCtx.fillStyle = `rgba(255, 255, 255, ${0.35 + depth * 0.55})`;
+            sceneCtx.beginPath();
+            sceneCtx.arc(pr[0], pr[1], Math.max(0.6, size * 0.55), 0, TAU);
+            sceneCtx.fill();
+        }
+
+        function renderScene(timestamp) {
+            if (!viewW || !viewH) return;
+
+            const t = timestamp / 1000;
+
+            pointerX += (targetX - pointerX) * 0.045;
+            pointerY += (targetY - pointerY) * 0.045;
+
+            const radius = globeR * (1 + Math.sin(t * 0.8) * 0.015);
+            const tiltX = -0.28 + pointerY * 0.32;
+            const spin = t * 0.18 + pointerX * 0.7;
+
+            sceneCtx.clearRect(0, 0, viewW, viewH);
+
+            // Soft bloom behind the hologram
+            const bloom = sceneCtx.createRadialGradient(centerX, centerY, radius * 0.1, centerX, centerY, radius * 1.9);
+            bloom.addColorStop(0, 'rgba(0, 240, 255, 0.10)');
+            bloom.addColorStop(0.35, 'rgba(123, 47, 255, 0.07)');
+            bloom.addColorStop(1, 'rgba(5, 5, 9, 0)');
+            sceneCtx.fillStyle = bloom;
+            sceneCtx.beginPath();
+            sceneCtx.arc(centerX, centerY, radius * 1.9, 0, TAU);
+            sceneCtx.fill();
+
+            // Globe
+            globeRings.forEach(ring => {
+                const projected = ring.pts.map(p => projectPoint(rotatePoint(p, tiltX, spin, 0), radius));
+                strokeDepth(projected, ring.color, ring.alpha, 1);
+            });
+
+            dust.forEach(p => {
+                drawGlowNode(rotatePoint(p, tiltX, spin, 0), '255, 255, 255', 0.4, radius);
+            });
+
+            // Orbits + travelling nodes
+            orbits.forEach(orbit => {
+                const orbitSpin = t * orbit.speed;
+                const place = p => {
+                    let q = rotatePoint(p, 0, orbitSpin, 0);
+                    q = rotatePoint(q, orbit.tiltX, 0, orbit.tiltZ);
+                    return rotatePoint(q, tiltX * 0.6, spin * 0.5, 0);
+                };
+
+                strokeDepth(orbit.pts.map(p => projectPoint(place(p), radius)), orbit.color, orbit.alpha, 0.9);
+
+                for (let n = 0; n < orbit.nodes; n++) {
+                    const angle = n * TAU / orbit.nodes + t * 0.45;
+                    const node = [Math.cos(angle) * orbit.radius, 0, Math.sin(angle) * orbit.radius];
+                    drawGlowNode(place(node), orbit.color, 0.85, radius);
+                }
+            });
+        }
+
+        function sceneLoop(timestamp) {
+            if (!running) return;
+            renderScene(timestamp);
+            frameId = requestAnimationFrame(sceneLoop);
+        }
+
+        function startScene() {
+            if (running || reducedMotion || !inView || document.hidden) return;
+            running = true;
+            frameId = requestAnimationFrame(sceneLoop);
+        }
+
+        function stopScene() {
+            running = false;
+            if (frameId !== null) cancelAnimationFrame(frameId);
+            frameId = null;
+        }
+
+        function resizeScene() {
+            const rect = sceneCanvas.getBoundingClientRect();
+            viewW = rect.width;
+            viewH = rect.height;
+
+            if (!viewW || !viewH) {
+                stopScene();
+                return;
+            }
+
+            pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+            sceneCanvas.width = Math.round(viewW * pixelRatio);
+            sceneCanvas.height = Math.round(viewH * pixelRatio);
+            sceneCtx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+            if (codeWindowEl) {
+                const winRect = codeWindowEl.getBoundingClientRect();
+                if (winRect.width) {
+                    centerX = winRect.left - rect.left + winRect.width / 2;
+                    centerY = winRect.top - rect.top + winRect.height / 2;
+                } else {
+                    centerX = viewW / 2;
+                    centerY = viewH / 2;
+                }
+            } else {
+                centerX = viewW / 2;
+                centerY = viewH / 2;
+            }
+
+            globeR = Math.max(180, Math.min(viewW * 0.30, viewH * 0.40, 360));
+
+            if (reducedMotion) {
+                renderScene(0);
+            } else {
+                startScene();
+            }
+        }
+
+        resizeScene();
+        window.addEventListener('resize', resizeScene);
+        window.addEventListener('load', resizeScene);
+
+        if (window.ResizeObserver) {
+            const sceneObserver = new ResizeObserver(resizeScene);
+            sceneObserver.observe(heroSection);
+            if (codeWindowEl) sceneObserver.observe(codeWindowEl);
+        }
+
+        if ('IntersectionObserver' in window) {
+            const sceneVisibility = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    inView = entry.isIntersecting;
+                    if (inView) {
+                        startScene();
+                    } else {
+                        stopScene();
+                    }
+                });
+            }, { threshold: 0.05 });
+            sceneVisibility.observe(heroSection);
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopScene();
+            } else {
+                startScene();
+            }
+        });
+
+        heroSection.addEventListener('mousemove', (e) => {
+            const rect = heroSection.getBoundingClientRect();
+            targetX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+            targetY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+        });
+
+        heroSection.addEventListener('mouseleave', () => {
+            targetX = 0;
+            targetY = 0;
+        });
+    }
 
     // Page Visibility
     document.addEventListener('visibilitychange', () => {
